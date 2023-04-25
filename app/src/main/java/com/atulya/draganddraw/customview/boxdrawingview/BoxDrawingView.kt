@@ -103,9 +103,7 @@ class BoxDrawingView(
         return bundle
     }
 
-    //    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onRestoreInstanceState(state: Parcelable) {
-
 
         val parentParcel: Parcelable? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             (state as Bundle).getParcelable(PARENT_PARCEL_TAG, Parcelable::class.java)

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">DragAndDraw</string>
+    <string name="boxdraw_content_description">Custom Box Drawing View. Tap and drap to draw.</string>
 </resources>
