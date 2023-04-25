@@ -1,9 +1,13 @@
 package com.atulya.draganddraw.customview.boxdrawingview
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PointF
+import android.os.Build
+import android.os.Bundle
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
@@ -15,7 +19,7 @@ class BoxDrawingView(
     attrs: AttributeSet? = null
 ) : View(context, attrs) {
 
-    private val boxList = mutableListOf<Box>()
+    private var boxes = ArrayList<Box>()
     private var currentBox: Box? = null
 
     private val boxPaint = Paint().apply {
@@ -25,18 +29,23 @@ class BoxDrawingView(
         color = 0x33002891
     }
 
+    init {
+        isSaveEnabled = true
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
 
         /**
          * [PointF] is a class we can use to keep coordinates
-         * togather.
+         * together.
          */
         val current = PointF(event.x, event.y)
 
         val action = when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 currentBox = Box(current).also {
-                    boxList.add(it)
+                    boxes.add(it)
                 }
                 "DOWN"
             }
@@ -49,7 +58,7 @@ class BoxDrawingView(
             MotionEvent.ACTION_UP -> {
                 updateCurrentBox(current)
                 currentBox = null
-                Log.d("#> ${this::class.simpleName}", "$boxList")
+                Log.d("#> ${this::class.simpleName}", "$boxes")
                 "UP"
             }
 
@@ -72,7 +81,7 @@ class BoxDrawingView(
     override fun onDraw(canvas: Canvas) {
         canvas.drawPaint(backgroundPaint)
 
-        boxList.forEach { box ->
+        boxes.forEach { box ->
             canvas.drawRect(box.left, box.top, box.right, box.bottom, boxPaint)
         }
     }
@@ -82,5 +91,40 @@ class BoxDrawingView(
             it.end = current
             invalidate() // Force the view to redraw itself
         }
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+
+        val bundle = Bundle()
+
+        bundle.putParcelableArrayList(BOXES_TAG, boxes)
+        bundle.putParcelable(PARENT_PARCEL_TAG, super.onSaveInstanceState())
+
+        return bundle
+    }
+
+    //    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    override fun onRestoreInstanceState(state: Parcelable) {
+
+
+        val parentParcel: Parcelable? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            (state as Bundle).getParcelable(PARENT_PARCEL_TAG, Parcelable::class.java)
+        } else {
+            (state as Bundle).getParcelable(PARENT_PARCEL_TAG)
+        }
+
+        boxes = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            state.getParcelableArrayList(BOXES_TAG, Box::class.java) as ArrayList<Box>
+        } else {
+            state.get(BOXES_TAG) as ArrayList<Box>
+        }
+        Log.d("#> ${this::class.simpleName}", "$boxes")
+
+        super.onRestoreInstanceState(parentParcel)
+    }
+
+    companion object {
+        const val BOXES_TAG = "boxes"
+        const val PARENT_PARCEL_TAG = "parentParcel"
     }
 }
