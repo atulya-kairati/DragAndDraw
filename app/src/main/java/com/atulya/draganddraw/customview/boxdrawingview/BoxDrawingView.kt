@@ -1,6 +1,8 @@
 package com.atulya.draganddraw.customview.boxdrawingview
 
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.PointF
 import android.util.AttributeSet
 import android.util.Log
@@ -16,6 +18,13 @@ class BoxDrawingView(
     private val boxList = mutableListOf<Box>()
     private var currentBox: Box? = null
 
+    private val boxPaint = Paint().apply {
+        color = 0x80003cc8.toInt()
+    }
+    private val backgroundPaint = Paint().apply {
+        color = 0x33002891
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
 
         /**
@@ -24,26 +33,31 @@ class BoxDrawingView(
          */
         val current = PointF(event.x, event.y)
 
-        val action = when(event.action){
+        val action = when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 currentBox = Box(current).also {
                     boxList.add(it)
                 }
                 "DOWN"
             }
+
             MotionEvent.ACTION_MOVE -> {
                 updateCurrentBox(current)
                 "MOVE"
             }
+
             MotionEvent.ACTION_UP -> {
                 updateCurrentBox(current)
                 currentBox = null
+                Log.d("#> ${this::class.simpleName}", "$boxList")
                 "UP"
             }
+
             MotionEvent.ACTION_CANCEL -> {
                 currentBox = null
                 "CANCEL"
             }
+
             else -> ""
         }
 
@@ -53,6 +67,14 @@ class BoxDrawingView(
         )
 
         return true
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        canvas.drawPaint(backgroundPaint)
+
+        boxList.forEach { box ->
+            canvas.drawRect(box.left, box.top, box.right, box.bottom, boxPaint)
+        }
     }
 
     private fun updateCurrentBox(current: PointF) {
